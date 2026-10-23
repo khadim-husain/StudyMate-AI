@@ -24,7 +24,7 @@ class VectorRetriever:
         query: str,
         document_ids: Optional[List[str]] = None,
         top_k: int = 5,
-        min_similarity: float = 0.25
+        min_similarity: float = 0.15
     ) -> List[Dict[str, Any]]:
         """Retrieve most relevant chunks for user query filtered strictly by user_id and document_ids."""
         query_embedding = embedding_service.get_embedding(query)
@@ -43,20 +43,30 @@ class VectorRetriever:
 
         # Rank by cosine similarity
         scored_chunks = []
+        all_candidates = []
         for chunk, filename in chunks_with_doc:
             if not chunk.embedding:
                 continue
             sim = cosine_similarity(query_embedding, chunk.embedding)
+            chunk_data = {
+                "chunk_id": chunk.id,
+                "document_id": chunk.document_id,
+                "document_title": filename,
+                "page_number": chunk.page_number,
+                "chunk_index": chunk.chunk_index,
+                "content": chunk.content,
+                "similarity": round(float(sim), 4)
+            }
+            all_candidates.append(chunk_data)
             if sim >= min_similarity:
-                scored_chunks.append({
-                    "chunk_id": chunk.id,
-                    "document_id": chunk.document_id,
-                    "document_title": filename,
-                    "page_number": chunk.page_number,
-                    "chunk_index": chunk.chunk_index,
-                    "content": chunk.content,
-                    "similarity": round(float(sim), 4)
-                })
+                scored_chunks.append(chunk_data)
+
+        # If document_ids was explicitly targeted and no chunk passed strict min_similarity threshold,
+        # fallback to the highest scoring chunks to preserve RAG context
+        if not scored_chunks and document_ids and all_candidates:
+            all_candidates.sort(key=lambda x: x["similarity"], reverse=True)
+            if all_candidates[0]["similarity"] > 0.05:
+                scored_chunks = all_candidates[:top_k]
 
         # Sort descending by similarity score
         scored_chunks.sort(key=lambda x: x["similarity"], reverse=True)
