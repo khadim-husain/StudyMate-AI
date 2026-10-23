@@ -1,0 +1,28 @@
+# Python
+**/venv/
+**/.venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Node / React Native
+**/node_modules/
+**/.expo/
+**/dist/
+**/web-build/
+expo-env.d.ts
+
+# Environment
+**/.env
+**/.env*.local
+
+# System & logs
+.DS_Store
+Thumbs.db
+*.log
