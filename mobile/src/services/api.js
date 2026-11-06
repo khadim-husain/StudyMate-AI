@@ -17,6 +17,7 @@ export const USE_MOCK_DATA = false;
 
 // Candidate URLs for StudyMate AI Backend
 export const CANDIDATE_URLS = {
+  PRODUCTION_RENDER: 'https://studymate-ai-backend-cwa4.onrender.com/api/v1',
   CLOUDFLARE_TUNNEL: 'https://ceiling-ministry-investing-kitty.trycloudflare.com/api/v1',
   LAN_CURRENT: 'http://172.19.119.123:8000/api/v1',
   TUNNEL: 'https://studymate-ai-dev.loca.lt/api/v1',
@@ -48,12 +49,7 @@ AsyncStorage.getItem(SERVER_URL_KEY).then((stored) => {
 export const getServerCandidates = () => {
   const candidates = [];
 
-  // 1. If user previously had a verified or custom URL, try it first
-  if (activeBackendUrl) {
-    candidates.push(activeBackendUrl);
-  }
-
-  // 2. Build-time or runtime environment variable override (e.g. for EAS production builds or custom tunnels)
+  // 1. Build-time or runtime environment variable override (e.g. for EAS production builds or custom tunnels)
   const envApiUrl = process.env.EXPO_PUBLIC_API_URL;
   if (envApiUrl && envApiUrl.startsWith('http')) {
     const cleanEnvUrl = envApiUrl.replace(/\/+$/, '');
@@ -61,6 +57,16 @@ export const getServerCandidates = () => {
     if (!candidates.includes(finalEnvUrl)) {
       candidates.push(finalEnvUrl);
     }
+  }
+
+  // 2. Default production cloud backend on Render
+  if (!candidates.includes(CANDIDATE_URLS.PRODUCTION_RENDER)) {
+    candidates.push(CANDIDATE_URLS.PRODUCTION_RENDER);
+  }
+
+  // 3. If user previously had a verified or custom URL, try it
+  if (activeBackendUrl && !candidates.includes(activeBackendUrl)) {
+    candidates.push(activeBackendUrl);
   }
 
   // 3. Web browser: use window hostname or localhost

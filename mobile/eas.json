@@ -14,7 +14,7 @@
       },
       "env": {
         "EXPO_PUBLIC_USE_RN_FETCH": "true",
-        "EXPO_PUBLIC_API_URL": "http://10.10.5.167:8000/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://studymate-ai-backend-cwa4.onrender.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB": "1014169992683-placeholder.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID": "1014169992683-placeholder.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS": "1014169992683-placeholder.apps.googleusercontent.com"
@@ -27,7 +27,7 @@
       },
       "env": {
         "EXPO_PUBLIC_USE_RN_FETCH": "true",
-        "EXPO_PUBLIC_API_URL": "http://10.10.5.167:8000/api/v1",
+        "EXPO_PUBLIC_API_URL": "https://studymate-ai-backend-cwa4.onrender.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB": "1014169992683-placeholder.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID": "1014169992683-placeholder.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS": "1014169992683-placeholder.apps.googleusercontent.com"
@@ -38,4 +38,3 @@
     "production": {}
   }
 }
-
