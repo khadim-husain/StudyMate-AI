@@ -1,33 +1,55 @@
-# Python
+# ========================================================
+# StudyMate AI - Safe Git Exclusion Rules
+# ========================================================
+
+# Python & Virtual Environments
 **/venv/
 **/.venv/
 **/__pycache__/
 *.pyc
 *.pyo
 *.pyd
+.Python
+env/
 .pytest_cache/
 .coverage
 htmlcov/
-backend/uploads/*
-!backend/uploads/.gitkeep
 
-# Node / React Native
+# Node.js & React Native / Expo
 **/node_modules/
 **/.expo/
 **/dist/
 **/web-build/
 expo-env.d.ts
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
 
-# Environment
+# Environment Variables & Secrets
 **/.env
+**/.env.*
 **/.env*.local
+!**/.env.example
 
-# Database Backups
+# Binaries & Executables
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Uploads & User Data
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Database Backups & Dumps
 **/backups/
 *.dump
 *.sql
 
-# System & logs
+# System & OS Files
 .DS_Store
 Thumbs.db
 *.log
