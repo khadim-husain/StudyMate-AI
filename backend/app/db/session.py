@@ -6,8 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.sqlalchemy_database_uri,
     pool_pre_ping=True,
+    pool_recycle=1800,
     pool_size=10,
     max_overflow=20,
     echo=False

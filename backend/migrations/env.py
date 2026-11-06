@@ -15,7 +15,7 @@ from app.models import Base
 config = context.config
 
 # Set sqlalchemy.url from our settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.sqlalchemy_database_uri)
 
 # Interpret the config file for Python logging.
 if config.config_file_name is not None:
@@ -39,7 +39,7 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = settings.DATABASE_URL
+    configuration["sqlalchemy.url"] = settings.sqlalchemy_database_uri
     
     connectable = engine_from_config(
         configuration,

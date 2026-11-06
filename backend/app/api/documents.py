@@ -12,6 +12,7 @@ from app.models.document import Document
 from app.models.chunk import DocumentChunk
 from app.schemas.document import DocumentResponse, DocumentStatusResponse, DocumentDetailResponse
 from app.rag.ingestion import ingestion_service
+from app.services.storage_service import storage_service
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -29,43 +30,27 @@ async def upload_document(
             detail="Only PDF documents (.pdf) are supported."
         )
 
-    # Ensure uploads directory exists
-    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
-
     # Generate safe server-side storage filename
     safe_filename = f"{current_user.id}_{uuid.uuid4().hex[:12]}_{os.path.basename(file.filename)}"
-    storage_path = os.path.join(settings.UPLOAD_DIR, safe_filename)
 
-    # Save uploaded file while monitoring max size
+    # Read uploaded file while monitoring max size
     max_bytes = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
-    bytes_read = 0
+    file_bytes = await file.read()
+    if len(file_bytes) > max_bytes:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"File exceeds maximum allowed size of {settings.MAX_UPLOAD_SIZE_MB}MB."
+        )
 
-    try:
-        with open(storage_path, "wb") as buffer:
-            while chunk := await file.read(1024 * 64): # 64KB chunks
-                bytes_read += len(chunk)
-                if bytes_read > max_bytes:
-                    buffer.close()
-                    if os.path.exists(storage_path):
-                        os.remove(storage_path)
-                    raise HTTPException(
-                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                        detail=f"File exceeds maximum allowed size of {settings.MAX_UPLOAD_SIZE_MB}MB."
-                    )
-                buffer.write(chunk)
-    except HTTPException:
-        raise
-    except Exception as e:
-        if os.path.exists(storage_path):
-            os.remove(storage_path)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to save file: {str(e)}")
+    # Save via unified storage service (S3/R2 Cloud Object Storage or local disk fallback)
+    storage_path = storage_service.save_file(file_bytes, safe_filename, content_type="application/pdf")
 
     # Create document record in database
     doc = Document(
         user_id=current_user.id,
         filename=file.filename,
         storage_path=storage_path,
-        file_size=bytes_read,
+        file_size=len(file_bytes),
         page_count=0,
         processing_status="pending"
     )
@@ -140,6 +125,29 @@ def get_document_status(
         chunk_count=chunk_count
     )
 
+@router.get("/{document_id}/chunks")
+def get_document_chunks(
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get extracted text chunks with page numbers and previews."""
+    doc = db.query(Document).filter(Document.id == document_id, Document.user_id == current_user.id).first()
+    if not doc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
+
+    chunks = db.query(DocumentChunk).filter(DocumentChunk.document_id == doc.id).order_by(DocumentChunk.chunk_index.asc()).all()
+    return [
+        {
+            "id": c.id,
+            "chunk_index": c.chunk_index,
+            "page_number": c.page_number,
+            "content": c.content,
+            "token_count": c.token_count
+        }
+        for c in chunks
+    ]
+
 @router.delete("/{document_id}", status_code=status.HTTP_200_OK)
 def delete_document(
     document_id: str,
@@ -151,12 +159,8 @@ def delete_document(
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
 
-    # Remove file on disk if exists
-    if os.path.exists(doc.storage_path):
-        try:
-            os.remove(doc.storage_path)
-        except Exception:
-            pass
+    # Remove file from cloud object storage or local disk
+    storage_service.delete_file(doc.storage_path)
 
     db.delete(doc)
     db.commit()

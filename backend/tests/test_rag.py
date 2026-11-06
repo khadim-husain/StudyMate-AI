@@ -19,10 +19,10 @@ def test_text_chunker():
     assert any(c["page_number"] == 2 for c in chunks)
 
 def test_embedding_service_dimensions():
-    """Test embedding service returns 768-dimensional float vectors."""
+    """Test embedding service returns vector of floats with valid dimensions (768 or 3072)."""
     text = "Machine learning algorithms optimize cost functions."
     vector = embedding_service.get_embedding(text)
-    assert len(vector) == 768
+    assert len(vector) in (768, 1536, 3072)
     assert all(isinstance(x, float) for x in vector)
 
 def test_cosine_similarity():

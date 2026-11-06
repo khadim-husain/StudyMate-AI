@@ -7,6 +7,8 @@ from app.models.summary import Summary
 from app.models.quiz import Quiz, QuizQuestion, QuizAttempt
 from app.models.flashcard import Flashcard
 from app.models.task import StudyTask
+from app.models.preferences import UserPreference
+from app.models.support import SupportTicket
 
 __all__ = [
     "Base",
@@ -20,5 +22,7 @@ __all__ = [
     "QuizQuestion",
     "QuizAttempt",
     "Flashcard",
-    "StudyTask"
+    "StudyTask",
+    "UserPreference",
+    "SupportTicket"
 ]

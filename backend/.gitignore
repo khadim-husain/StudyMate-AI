@@ -25,5 +25,10 @@ wheels/
 .coverage
 htmlcov/
 .env
+# backups and scripts
+backups/
+*.dump
+*.sql
+*.bat
 uploads/*
 !uploads/.gitkeep

@@ -22,6 +22,11 @@ expo-env.d.ts
 **/.env
 **/.env*.local
 
+# Database Backups
+**/backups/
+*.dump
+*.sql
+
 # System & logs
 .DS_Store
 Thumbs.db

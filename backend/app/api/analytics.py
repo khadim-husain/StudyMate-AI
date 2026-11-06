@@ -65,8 +65,7 @@ def get_analytics_overview(
     subjects_raw = (
         db.query(
             StudyTask.subject,
-            func.count(StudyTask.id).label("total_tasks"),
-            func.sum(func.cast(StudyTask.completed, func.integer if hasattr(func, "integer") else None)).label("completed_tasks")
+            func.count(StudyTask.id).label("total_tasks")
         )
         .filter(StudyTask.user_id == current_user.id)
         .group_by(StudyTask.subject)

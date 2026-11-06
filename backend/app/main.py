@@ -2,6 +2,7 @@ import os
 import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -18,8 +19,9 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Ensure upload directory exists
+    # Startup: Ensure upload directories exist
     os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+    os.makedirs(os.path.join(settings.UPLOAD_DIR, "avatars"), exist_ok=True)
     logger.info("StudyMate AI Backend started successfully.")
     yield
     # Shutdown
@@ -32,11 +34,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Ensure upload directory exists before mounting
+os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+os.makedirs(os.path.join(settings.UPLOAD_DIR, "avatars"), exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="uploads")
+
 # CORS Configuration
 origins = settings.get_cors_origins()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins if origins else ["*"],
+    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,7 +60,9 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Health & Database Readiness Check Endpoint
+@app.get("/health", tags=["Health"])
 @app.get("/api/health", tags=["Health"])
+@app.get("/api/v1/health", tags=["Health"])
 def health_check():
     """Verify application health and database connectivity."""
     db_status = "unhealthy"
